@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BIS assistant</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">BIS</div>
+        <div>
+          <h1 class="brand-title">BIS assistant</h1>
+          <p class="brand-subtitle">Indian Standards & Regulatory Guidance</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="bis-account-btn" type="button" class="btn-header" title="Manage official BIS portal login credentials">
+          <span id="bis-auth-indicator" class="status-dot guest"></span>
+          <span id="bis-account-text">Account: Guest</span>
+        </button>
+
+        <button id="clear-chat-btn" type="button" class="btn-header" title="Clear chat history">
+          Clear
+        </button>
+      </div>
+    </header>
+
+    <!-- Chat Feed -->
+    <main id="chat-feed" class="chat-feed" role="log" aria-live="polite">
+      <!-- Initial Greeting Message from BIS assistant -->
+      <div class="message-row assistant-row">
+        <div class="avatar avatar-assistant">BIS</div>
+        <div class="message-bubble">
+          <div class="bubble-meta">
+            <div class="meta-tags">
+              <span class="meta-tag">Official Assistant</span>
+              <span class="meta-tag">standardsbis.bsbedge.com</span>
+            </div>
+          </div>
+          <div class="bubble-markdown">
+            <p><strong>Hello! I am your BIS assistant.</strong></p>
+            <p>I provide verified, source-backed answers from the Bureau of Indian Standards catalog. You can search by Indian Standard (IS) number, product name, or regulatory scheme:</p>
+            
+            <div class="chips-container" id="greeting-chips">
+              <button class="chat-chip" data-query="What are the purity grades and hallmarking rules under IS 1417?">Gold Hallmarking (IS 1417)</button>
+              <button class="chat-chip" data-query="What is the specification for Ordinary Portland Cement under IS 269?">Portland Cement (IS 269)</button>
+              <button class="chat-chip" data-query="What are the test parameters for Packaged Drinking Water under IS 14543?">Packaged Water (IS 14543)</button>
+              <button class="chat-chip" data-query="What is the procedure to obtain an ISI mark license under Scheme-I?">ISI Mark Procedure</button>
+              <button class="chat-chip" data-query="What electronic products are covered under Compulsory Registration Scheme (CRS)?">CRS Electronics</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Chat Input Area -->
+    <footer class="chat-input-area">
+      <form id="chat-form">
+        <div class="input-wrapper">
+          <textarea
+            id="chat-input"
+            class="chat-textarea"
+            rows="1"
+            placeholder="Ask BIS assistant (e.g., IS 1417, IS 269, cement, water testing)..."
+            required
+          ></textarea>
+          <button type="submit" id="send-btn" class="btn-send" title="Send query" aria-label="Send query">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+        <div class="input-footer">
+          <span>Enter to send &bull; Shift+Enter for new line</span>
+          <span id="system-status">System Ready</span>
+        </div>
+      </form>
+    </footer>
+
+  </div>
+
+  <!-- BIS Login / Credentials Modal -->
+  <div id="bis-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modal-title" class="modal-title">BIS Portal Credentials</h2>
+        <button id="close-modal-btn" class="btn-close" aria-label="Close modal">&times;</button>
+      </div>
+
+      <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+        Authenticate with your registered account on <code>standardsbis.bsbedge.com</code> to download official full Indian Standard PDF documents. Session is saved locally.
+      </p>
+
+      <form id="bis-login-form" class="modal-form">
+        <div class="form-group">
+          <label for="bis-username-input">User ID / Email</label>
+          <input type="text" id="bis-username-input" class="form-input" placeholder="e.g. your_email@domain.com" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label for="bis-password-input">Password</label>
+          <input type="password" id="bis-password-input" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <!-- Captcha Verification (if needed) -->
+        <div id="captcha-container" style="display: none; padding: 10px; background: #fafafa; border: 1px solid var(--border-light); border-radius: var(--radius-sm);">
+          <label style="font-size: 11px; font-weight: 500; margin-bottom: 6px; display: block;">Captcha Verification</label>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <img id="captcha-img" src="" alt="Captcha" style="height: 36px; border: 1px solid var(--border-medium); border-radius: 4px; background: #fff;">
+            <input type="text" id="bis-captcha-input" class="form-input" placeholder="Enter characters" style="flex: 1;">
+          </div>
+        </div>
+
+        <!-- Status Message -->
+        <div id="modal-status-msg" class="modal-status" style="display: none;"></div>
+
+        <div class="modal-actions">
+          <button type="button" id="cancel-login-btn" class="btn-secondary">Cancel</button>
+          <button type="submit" id="save-login-btn" class="btn-primary">
+            <span id="login-btn-text">Authenticate &amp; Save</span>
+          </button>
+        </div>
+      </form>
+
+      <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-light); font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between;">
+        <span>No account yet?</span>
+        <a href="https://standardsbis.bsbedge.com/BIS_Register" target="_blank" rel="noopener noreferrer" style="color: var(--text-primary); text-decoration: underline;">Register free on BIS portal &nearr;</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
