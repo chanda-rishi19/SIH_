@@ -10,7 +10,8 @@
 
   <div class="app-container">
 
-    <!-- Header -->
+  
+
     <header class="app-header">
       <div class="header-brand">
         <div class="brand-icon">BIS</div>
@@ -20,7 +21,10 @@
         </div>
       </div>
 
+
       <div class="header-actions">
+        <button id="new-chat-btn" type="button" class="btn-header" title="Start a new chat">+ New chat</button>
+        <button id="appearance-btn" type="button" class="btn-header" title="Switch appearance">Appearance</button>
         <button id="bis-account-btn" type="button" class="btn-header" title="Manage official BIS portal login credentials">
           <span id="bis-auth-indicator" class="status-dot guest"></span>
           <span id="bis-account-text">Account: Guest</span>
@@ -32,9 +36,20 @@
       </div>
     </header>
 
-    <!-- Chat Feed -->
+    <section class="workspace-toolbar" aria-label="Chat tools">
+      <div class="toolbar-group">
+        <button id="history-btn" type="button" class="tool-button" title="View recent searches">History</button>
+        <span class="toolbar-divider" aria-hidden="true"></span>
+        <span class="toolbar-label">Suggested searches</span>
+        <button class="suggestion-button" type="button" data-query="Summarize the key requirements of IS 1417">IS 1417 summary</button>
+        <button class="suggestion-button" type="button" data-query="What documents are required for an ISI mark license?">ISI license documents</button>
+      </div>
+      <div id="history-panel" class="history-panel hidden" aria-live="polite"></div>
+    </section>
+
+  
     <main id="chat-feed" class="chat-feed" role="log" aria-live="polite">
-      <!-- Initial Greeting Message from BIS assistant -->
+   
       <div class="message-row assistant-row">
         <div class="avatar avatar-assistant">BIS</div>
         <div class="message-bubble">
@@ -64,6 +79,17 @@
     <footer class="chat-input-area">
       <form id="chat-form">
         <div class="input-wrapper">
+          <div class="attach-menu-wrap">
+            <button type="button" id="attach-menu-btn" class="icon-button" title="Add image, document, or camera input" aria-label="Open attachment options" aria-expanded="false">+</button>
+            <div id="attach-menu" class="attach-menu hidden" role="menu">
+              <button type="button" id="camera-btn" class="attach-option" role="menuitem"><span aria-hidden="true">&#128247;</span> Camera</button>
+              <button type="button" id="image-btn" class="attach-option" role="menuitem"><span aria-hidden="true">&#128444;</span> Image</button>
+              <button type="button" id="document-btn" class="attach-option" role="menuitem"><span aria-hidden="true">&#128196;</span> Document</button>
+              <button type="button" id="menu-voice-btn" class="attach-option" role="menuitem"><span aria-hidden="true">&#127908;</span> Voice</button>
+            </div>
+            <input id="file-input" type="file" accept="image/*,.pdf,.txt,.doc,.docx" hidden>
+            <input id="camera-input" type="file" accept="image/*" capture="environment" hidden>
+          </div>
           <textarea
             id="chat-input"
             class="chat-textarea"
@@ -78,6 +104,27 @@
             </svg>
           </button>
         </div>
+        <div id="attachment-preview" class="attachment-preview hidden"></div>
+        <div class="format-row">
+          <label for="assistant-mode">Mode</label>
+          <select id="assistant-mode" class="format-select" title="Choose how the assistant responds">
+            <option value="standard">Standard</option>
+            <option value="research">Deep research</option>
+            <option value="precise">Precise facts</option>
+          </select>
+          <label for="response-format">Output</label>
+          <select id="response-format" class="format-select">
+            <option value="detailed">Detailed answer</option>
+            <option value="summary">Key points</option>
+            <option value="formal">Formal report</option>
+          </select>
+          <label class="ai-toggle" title="Include web and official source lookup">
+            <input id="source-search-toggle" type="checkbox">
+            <span>Sources</span>
+          </label>
+          <button id="improve-prompt-btn" type="button" class="prompt-tool" title="Rewrite your question for a better answer">Improve prompt</button>
+          <span id="voice-status" class="voice-status" aria-live="polite"></span>
+        </div>
         <div class="input-footer">
           <span>Enter to send &bull; Shift+Enter for new line</span>
           <span id="system-status">System Ready</span>
@@ -87,7 +134,7 @@
 
   </div>
 
-  <!-- BIS Login / Credentials Modal -->
+ 
   <div id="bis-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-card">
       <div class="modal-header">
@@ -110,7 +157,6 @@
           <input type="password" id="bis-password-input" class="form-input" placeholder="••••••••" required autocomplete="current-password">
         </div>
 
-        <!-- Captcha Verification (if needed) -->
         <div id="captcha-container" style="display: none; padding: 10px; background: #fafafa; border: 1px solid var(--border-light); border-radius: var(--radius-sm);">
           <label style="font-size: 11px; font-weight: 500; margin-bottom: 6px; display: block;">Captcha Verification</label>
           <div style="display: flex; gap: 8px; align-items: center;">
@@ -119,7 +165,8 @@
           </div>
         </div>
 
-        <!-- Status Message -->
+      
+        
         <div id="modal-status-msg" class="modal-status" style="display: none;"></div>
 
         <div class="modal-actions">

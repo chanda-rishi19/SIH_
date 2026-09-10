@@ -1,7 +1,4 @@
-/**
- * BIS assistant - Chatbot Application Controller
- * Optimized for minimal bandwidth and weak internet connections.
- */
+
 
 document.addEventListener("DOMContentLoaded", () => {
   const chatFeed = document.getElementById("chat-feed");
@@ -10,8 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const sendBtn = document.getElementById("send-btn");
   const clearChatBtn = document.getElementById("clear-chat-btn");
   const systemStatus = document.getElementById("system-status");
-
-  // BIS Account Elements
   const bisAccountBtn = document.getElementById("bis-account-btn");
   const bisAuthIndicator = document.getElementById("bis-auth-indicator");
   const bisAccountText = document.getElementById("bis-account-text");
@@ -27,15 +22,35 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalStatusMsg = document.getElementById("modal-status-msg");
   const saveLoginBtn = document.getElementById("save-login-btn");
   const loginBtnText = document.getElementById("login-btn-text");
+  const newChatBtn = document.getElementById("new-chat-btn");
+  const appearanceBtn = document.getElementById("appearance-btn");
+  const historyBtn = document.getElementById("history-btn");
+  const historyPanel = document.getElementById("history-panel");
+  const fileInput = document.getElementById("file-input");
+  const cameraInput = document.getElementById("camera-input");
+  const attachMenuBtn = document.getElementById("attach-menu-btn");
+  const attachMenu = document.getElementById("attach-menu");
+  const cameraBtn = document.getElementById("camera-btn");
+  const imageBtn = document.getElementById("image-btn");
+  const documentBtn = document.getElementById("document-btn");
+  const menuVoiceBtn = document.getElementById("menu-voice-btn");
+  const attachmentPreview = document.getElementById("attachment-preview");
+  const assistantMode = document.getElementById("assistant-mode");
+  const sourceSearchToggle = document.getElementById("source-search-toggle");
+  const improvePromptBtn = document.getElementById("improve-prompt-btn");
+  const voiceStatus = document.getElementById("voice-status");
+  const responseFormat = document.getElementById("response-format");
 
   let isSubmitting = false;
+  let selectedAttachment = null;
+  let lastQuery = "";
 
-  // Initialize health and auth status
+
   checkHealth();
   checkBisAuth();
 
-  // Attach greeting chips
   setupGreetingChips();
+  setupFeatureControls();
 
   async function checkHealth() {
     try {
@@ -82,7 +97,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Modal Handlers
   function openModal(msg = "") {
     bisModal.classList.remove("hidden");
     if (msg) {
@@ -114,7 +128,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === bisModal) closeModal();
   });
 
-  // BIS Login Submission
   bisLoginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const username = bisUsernameInput.value.trim();
@@ -164,13 +177,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Auto-resize chat textarea
+
   chatInput.addEventListener("input", () => {
     chatInput.style.height = "auto";
     chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + "px";
   });
 
-  // Handle Enter key for submission (Shift+Enter for newline)
   chatInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -180,7 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Setup Chips Click Listener
+
   function setupGreetingChips() {
     const chips = document.querySelectorAll(".chat-chip");
     chips.forEach((chip) => {
@@ -193,7 +205,124 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Clear Chat History
+  function setupFeatureControls() {
+    document.querySelectorAll(".suggestion-button").forEach((button) => {
+      button.addEventListener("click", () => submitUserQuery(button.dataset.query));
+    });
+
+    newChatBtn?.addEventListener("click", () => clearChatBtn.click());
+    appearanceBtn?.addEventListener("click", () => {
+      document.body.classList.toggle("dark-theme");
+      const dark = document.body.classList.contains("dark-theme");
+      localStorage.setItem("bis-theme", dark ? "dark" : "light");
+      appearanceBtn.textContent = dark ? "Light mode" : "Dark mode";
+    });
+    if (localStorage.getItem("bis-theme") === "dark") {
+      document.body.classList.add("dark-theme");
+      if (appearanceBtn) appearanceBtn.textContent = "Light mode";
+    }
+
+    historyBtn?.addEventListener("click", () => {
+      historyPanel.classList.toggle("hidden");
+      renderHistory();
+    });
+
+    attachMenuBtn?.addEventListener("click", () => {
+      const isHidden = attachMenu.classList.toggle("hidden");
+      attachMenuBtn.setAttribute("aria-expanded", String(!isHidden));
+    });
+    cameraBtn?.addEventListener("click", () => {
+      cameraInput?.click();
+      closeAttachMenu();
+    });
+    imageBtn?.addEventListener("click", () => {
+      fileInput?.setAttribute("accept", "image/*");
+      fileInput?.click();
+      closeAttachMenu();
+    });
+    documentBtn?.addEventListener("click", () => {
+      fileInput?.setAttribute("accept", ".pdf,.txt,.doc,.docx");
+      fileInput?.click();
+      closeAttachMenu();
+    });
+    menuVoiceBtn?.addEventListener("click", () => {
+      startVoiceInput();
+      closeAttachMenu();
+    });
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest(".attach-menu-wrap")) closeAttachMenu();
+    });
+
+    fileInput?.addEventListener("change", () => handleFileSelection(fileInput));
+    cameraInput?.addEventListener("change", () => handleFileSelection(cameraInput));
+
+    function handleFileSelection(input) {
+      selectedAttachment = input.files[0] || null;
+      if (!selectedAttachment) {
+        attachmentPreview.classList.add("hidden");
+        return;
+      }
+      attachmentPreview.classList.remove("hidden");
+      attachmentPreview.innerHTML = `<span>${escapeHtml(selectedAttachment.name)}</span><button type="button" aria-label="Remove attachment">Remove</button>`;
+      attachmentPreview.querySelector("button").addEventListener("click", clearAttachment);
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    function startVoiceInput() {
+      if (!SpeechRecognition) {
+        voiceStatus.textContent = "Voice input is not supported in this browser.";
+        return;
+      }
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-IN";
+      recognition.interimResults = false;
+      voiceStatus.textContent = "Listening...";
+      recognition.onresult = (event) => {
+        chatInput.value = event.results[0][0].transcript;
+        chatInput.dispatchEvent(new Event("input"));
+      };
+      recognition.onerror = () => { voiceStatus.textContent = "Voice input unavailable."; };
+      recognition.onend = () => {
+        if (voiceStatus.textContent === "Listening...") voiceStatus.textContent = "Voice ready";
+      };
+      recognition.start();
+    }
+
+    improvePromptBtn?.addEventListener("click", () => {
+      const currentPrompt = chatInput.value.trim();
+      if (!currentPrompt) {
+        chatInput.focus();
+        voiceStatus.textContent = "Enter a question first.";
+        return;
+      }
+      chatInput.value = `Give a clear, source-backed answer about ${currentPrompt}. Include the applicable Indian Standard, requirements, testing steps, and important exceptions.`;
+      chatInput.dispatchEvent(new Event("input"));
+      voiceStatus.textContent = "Prompt improved";
+    });
+  }
+
+  function clearAttachment() {
+    selectedAttachment = null;
+    if (fileInput) fileInput.value = "";
+    if (cameraInput) cameraInput.value = "";
+    attachmentPreview?.classList.add("hidden");
+  }
+
+  function closeAttachMenu() {
+    attachMenu?.classList.add("hidden");
+    attachMenuBtn?.setAttribute("aria-expanded", "false");
+  }
+
+  function renderHistory() {
+    const history = JSON.parse(localStorage.getItem("bis-history") || "[]");
+    historyPanel.innerHTML = history.length
+      ? history.map((query) => `<button type="button" class="history-item">${escapeHtml(query)}</button>`).join("")
+      : `<span class="history-empty">Your recent questions will appear here.</span>`;
+    historyPanel.querySelectorAll(".history-item").forEach((item) => {
+      item.addEventListener("click", () => submitUserQuery(item.textContent));
+    });
+  }
+
   clearChatBtn.addEventListener("click", () => {
     chatFeed.innerHTML = `
       <div class="message-row assistant-row">
@@ -221,7 +350,6 @@ document.addEventListener("DOMContentLoaded", () => {
     chatInput.focus();
   });
 
-  // Form Submit Handler
   chatForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const query = chatInput.value.trim();
@@ -232,16 +360,27 @@ document.addEventListener("DOMContentLoaded", () => {
   async function submitUserQuery(query) {
     if (isSubmitting) return;
     isSubmitting = true;
+    lastQuery = query;
+    const history = JSON.parse(localStorage.getItem("bis-history") || "[]").filter((item) => item !== query);
+    localStorage.setItem("bis-history", JSON.stringify([query, ...history].slice(0, 8)));
     sendBtn.disabled = true;
 
-    // Reset textarea
+   
     chatInput.value = "";
     chatInput.style.height = "auto";
 
-    // 1. Append User Message Bubble
-    appendUserMessage(query);
+    
+    const attachmentContext = selectedAttachment ? `\n[Attached file: ${selectedAttachment.name}]` : "";
+    const formatContext = responseFormat?.value && responseFormat.value !== "detailed"
+      ? `\n[Response format: ${responseFormat.value}]`
+      : "";
+    const modeContext = assistantMode?.value && assistantMode.value !== "standard"
+      ? `\n[Assistant mode: ${assistantMode.value}]`
+      : "";
+    const sourceContext = sourceSearchToggle?.checked ? "\n[Use official web and source lookup]" : "";
+    appendUserMessage(query + attachmentContext);
 
-    // 2. Append Typing Indicator Bubble
+    
     const typingId = "typing-" + Date.now();
     appendTypingIndicator(typingId);
     scrollToBottom();
@@ -250,7 +389,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch("/api/query", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query: query + attachmentContext + formatContext + modeContext + sourceContext }),
       });
 
       if (!response.ok) {
@@ -260,9 +399,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const data = await response.json();
 
-      // Remove typing bubble and append full Assistant response
+      
       removeElement(typingId);
       appendAssistantMessage(data);
+      clearAttachment();
       scrollToBottom();
 
     } catch (err) {
@@ -327,20 +467,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const bubble = document.createElement("div");
     bubble.className = "message-bubble";
 
-    // 1. Meta Tags & Copy Action
+   
     const metaBar = document.createElement("div");
     metaBar.className = "bubble-meta";
 
     const tagsDiv = document.createElement("div");
     tagsDiv.className = "meta-tags";
 
-    // Engine Tag
+   
     const engineTag = document.createElement("span");
     engineTag.className = "meta-tag engine-tag";
     engineTag.textContent = data.engine || "BIS AI";
     tagsDiv.appendChild(engineTag);
-
-    // Category Tag
     if (data.category) {
       const catTag = document.createElement("span");
       catTag.className = "meta-tag";
@@ -348,7 +486,6 @@ document.addEventListener("DOMContentLoaded", () => {
       tagsDiv.appendChild(catTag);
     }
 
-    // Keywords Tags
     (data.extracted_keywords || []).slice(0, 3).forEach((kw) => {
       const kwTag = document.createElement("span");
       kwTag.className = "meta-tag";
@@ -356,7 +493,6 @@ document.addEventListener("DOMContentLoaded", () => {
       tagsDiv.appendChild(kwTag);
     });
 
-    // Copy Button
     const copyBtn = document.createElement("button");
     copyBtn.className = "copy-button";
     copyBtn.innerHTML = `
@@ -375,7 +511,6 @@ document.addEventListener("DOMContentLoaded", () => {
     metaBar.appendChild(copyBtn);
     bubble.appendChild(metaBar);
 
-    // 2. Matched Indian Standards Grid (if standards found)
     const standards = data.matched_standards || [];
     if (standards.length > 0) {
       const stdHeader = document.createElement("div");
@@ -416,8 +551,6 @@ document.addEventListener("DOMContentLoaded", () => {
             </button>
           </div>
         `;
-
-        // Wire download button
         const dlBtn = card.querySelector(".btn-std-download");
         dlBtn.addEventListener("click", () => {
           downloadStandardPdf(std.preview_id, std.is_number, dlBtn);
@@ -429,7 +562,6 @@ document.addEventListener("DOMContentLoaded", () => {
       bubble.appendChild(grid);
     }
 
-    // 3. Primary Standard Clause & Scope Preview Accordion
     if (data.primary_preview && data.primary_preview.trim().length > 40) {
       const previewBox = document.createElement("div");
       previewBox.className = "preview-box";
@@ -454,13 +586,12 @@ document.addEventListener("DOMContentLoaded", () => {
       bubble.appendChild(previewBox);
     }
 
-    // 4. Formatted Answer Markdown
     const markdownDiv = document.createElement("div");
     markdownDiv.className = "bubble-markdown";
     markdownDiv.innerHTML = formatMarkdown(data.answer || "");
     bubble.appendChild(markdownDiv);
 
-    // 5. Official Source Bar
+    
     if (data.source_url) {
       const sourceBar = document.createElement("div");
       sourceBar.className = "source-bar";
@@ -471,12 +602,42 @@ document.addEventListener("DOMContentLoaded", () => {
       bubble.appendChild(sourceBar);
     }
 
+      const actionBar = document.createElement("div");
+      actionBar.className = "response-actions";
+      actionBar.innerHTML = `
+        <button type="button" data-action="highlight">Highlight</button>
+        <button type="button" data-action="copy">Copy answer</button>
+        <button type="button" data-action="share">Share</button>
+        <button type="button" data-action="regenerate">Regenerate</button>
+        <button type="button" data-action="export">Export</button>
+      `;
+      actionBar.querySelector('[data-action="highlight"]').addEventListener("click", (event) => {
+        markdownDiv.classList.toggle("highlighted");
+        event.currentTarget.textContent = markdownDiv.classList.contains("highlighted") ? "Remove highlight" : "Highlight";
+      });
+      actionBar.querySelector('[data-action="copy"]').addEventListener("click", () => navigator.clipboard.writeText(data.answer || ""));
+      actionBar.querySelector('[data-action="share"]').addEventListener("click", async () => {
+        if (navigator.share) await navigator.share({ title: "BIS Assistant answer", text: data.answer || "" });
+        else await navigator.clipboard.writeText(data.answer || "");
+      });
+      actionBar.querySelector('[data-action="regenerate"]').addEventListener("click", () => submitUserQuery(lastQuery));
+      actionBar.querySelector('[data-action="export"]').addEventListener("click", () => exportAnswer(data.answer || ""));
+      bubble.appendChild(actionBar);
+
+
+    function exportAnswer(answer) {
+      const blob = new Blob([answer], { type: "text/plain;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "bis-answer.txt";
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
     row.innerHTML = `<div class="avatar avatar-assistant">BIS</div>`;
     row.appendChild(bubble);
     chatFeed.appendChild(row);
   }
 
-  // Handle PDF Download in Chat
   async function downloadStandardPdf(previewId, isNumber, btn) {
     const originalText = btn.textContent;
     btn.disabled = true;
@@ -531,33 +692,28 @@ document.addEventListener("DOMContentLoaded", () => {
       .join(" ");
   }
 
-  // Markdown Formatter
   function formatMarkdown(text) {
     if (!text) return "";
     let html = escapeHtml(text);
 
-    // Headers
     html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
     html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
     html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
     html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
 
-    // Bold & Italics
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
 
-    // Inline Code
     html = html.replace(/`(.*?)`/g, '<code>$1</code>');
 
-    // Blockquotes
     html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
 
-    // List items (bullets and numbered)
+    
     html = html.replace(/^\s*[-*]\s+(.*$)/gim, '<li>$1</li>');
     html = html.replace(/^\s*\d+\.\s+(.*$)/gim, '<li>$1</li>');
     html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
 
-    // Paragraphs
+  
     const paragraphs = html.split(/\n\n+/);
     html = paragraphs
       .map((p) => {
