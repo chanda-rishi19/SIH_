@@ -75,7 +75,7 @@ def detect_conversational_intent(user_prompt: str) -> Optional[str]:
     if any(p in cleaned for p in ["how are you", "how are you doing", "whats up", "what's up", "how do you do"]):
         return "smalltalk"
     if cleaned in {"what is bis", "about bis", "tell me about bis", "what does bis do", "bis full form"}:
-        return "identit"y
+        return "identit"
     return None
 def _heuristic_fallback(user_prompt: str) -> Dict[str, Any]:
     """Deterministic rule-based fallback when LLM is unavailable or times out.
