@@ -31,29 +31,60 @@ RESPONSE GUIDELINES BY QUERY TYPE:
      - Key Regulatory Requirements & Standards (Citing IS numbers/Clauses)**
      - Application / Compliance Procedure**
      - Official Reference & Guidance"""
+LANGUAGE_NAMES = {
+    "en": "English",
+    "hi": "Hindi (हिन्दी)",
+    "ta": "Tamil (தமிழ்)",
+    "te": "Telugu (తెలుగు)",
+    "bn": "Bengali (বাংলা)",
+    "mr": "Marathi (मराठी)",
+    "gu": "Gujarati (ગુજરાતી)",
+    "kn": "Kannada (ಕನ್ನಡ)",
+}
+
+
 def format_user_prompt(
     query: str,
     retrieved_context: str,
     source_url: str,
     is_general: bool = False,
     intent_type: str = "",
+    language: str = "en",
 ) -> str:
-    """Formats the user query and scraped RAG context into a structured prompt."""
+    """Formats the user query and scraped RAG context into a structured prompt with strict target language enforcement."""
+    target_lang = language.lower() if language else "en"
+    lang_name = LANGUAGE_NAMES.get(target_lang, "English")
+
+    lang_header = ""
+    lang_footer = ""
+    if target_lang != "en":
+        lang_header = f"""=======================================================
+MANDATORY TARGET LANGUAGE: {lang_name}
+- You MUST synthesize your entire response in {lang_name}.
+- Do NOT output in English! Even if the query is in English, write the answer in {lang_name}.
+- Retain all Indian Standard (IS) alphanumeric numbers (e.g., IS 1417:2016, IS 269:2015, IS 14543), regulatory abbreviations (e.g., HUID, ISI Mark, CRS Scheme-II, FMCS, BIS CARE), purity karats (14K, 18K, 22K, 24K), and official portal URLs in English/alphanumeric format for statutory accuracy.
+=======================================================
+
+"""
+        lang_footer = f"\n\nCRITICAL: Remember that your entire response MUST be written in {lang_name}."
+
     if is_general:
-        return f"""USER CONVERSATIONAL QUERY:
+        return f"""{lang_header}USER CONVERSATIONAL QUERY:
 {query}
 CONVERSATIONAL INTENT:
 {intent_type or 'General Inquiry'}
-OFFICIAL BIS CONTEXT & CAPABILITIES
+OFFICIAL BIS CONTEXT & CAPABILITIES:
 {retrieved_context}
 OFFICIAL PORTAL SOURCE URL:
 {source_url}
-Please synthesize a warm, professional, and helpful response following the BIS Assistant guidelines."""
 
-    return f"""USER QUERY:
+Please synthesize a warm, professional, and helpful response following the BIS Assistant guidelines.{lang_footer}"""
+
+    return f"""{lang_header}USER QUERY:
 {query}
 SCRAPED BIS PORTAL CONTEXT:
 {retrieved_context}
 OFFICIAL PORTAL SOURCE URL:
 {source_url}
-Please synthesize a comprehensive, source-backed answer following the strict BIS regulatory guidelines."""
+
+Please synthesize a comprehensive, source-backed answer following the strict BIS regulatory guidelines.{lang_footer}"""

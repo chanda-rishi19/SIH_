@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from playwright.async_api import async_playwright
 from bs4 import BeautifulSoup
-from app.core.config import settings
-from app.core.logger import logger
+from backend.core.config import settings
+from backend.core.logger import logger
 BIS_PORTAL_BASE = "https://standardsbis.bsbedge.com"
 LOGIN_URL = f"{BIS_PORTAL_BASE}/BIS_Login"
 def get_bis_auth_status() -> Dict[str, Any]:

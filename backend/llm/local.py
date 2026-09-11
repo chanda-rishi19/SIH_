@@ -1,21 +1,24 @@
 from openai import OpenAI
-from app.core.config import settings
-from app.core.logger import logger
+from backend.core.config import settings
+from backend.core.logger import logger
 
 
-def query_local_llm(prompt: str, system_prompt: str) -> str:
+def query_local_llm(prompt: str, system_prompt: str, timeout: float = None, max_tokens: int = None) -> str:
     """
     Executes answer generation via local Ollama instance using the OpenAI-compatible SDK.
-    Enforces a strict timeout specified in settings.LOCAL_TIMEOUT.
+    Enforces a strict timeout specified in timeout or settings.LOCAL_TIMEOUT.
     """
+    effective_timeout = timeout or settings.LOCAL_TIMEOUT
+    effective_max_tokens = max_tokens or 1000
+
     logger.info(
-        f"Querying local LLM ({settings.LOCAL_MODEL}) via {settings.OLLAMA_BASE_URL} (timeout={settings.LOCAL_TIMEOUT}s)..."
+        f"Querying local LLM ({settings.LOCAL_MODEL}) via {settings.OLLAMA_BASE_URL} (timeout={effective_timeout}s, max_tokens={effective_max_tokens})..."
     )
 
     client = OpenAI(
         base_url=settings.OLLAMA_BASE_URL,
         api_key="ollama",
-        timeout=settings.LOCAL_TIMEOUT,
+        timeout=effective_timeout,
     )
 
     response = client.chat.completions.create(
@@ -25,8 +28,8 @@ def query_local_llm(prompt: str, system_prompt: str) -> str:
             {"role": "user", "content": prompt},
         ],
         temperature=0.2,
-        max_tokens=500,
-        timeout=settings.LOCAL_TIMEOUT,
+        max_tokens=effective_max_tokens,
+        timeout=effective_timeout,
     )
 
     answer = response.choices[0].message.content

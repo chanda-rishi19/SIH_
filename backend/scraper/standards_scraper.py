@@ -3,7 +3,7 @@ import urllib.request
 import urllib.parse
 from typing import Dict, Any, List, Optional
 from bs4 import BeautifulSoup
-from app.core.logger import logger
+from backend.core.logger import logger
 
 BIS_PORTAL_BASE = "https://standardsbis.bsbedge.com"
 HEADERS = {

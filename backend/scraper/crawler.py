@@ -2,8 +2,8 @@ import asyncio
 from typing import Dict, Any, List
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
-from app.core.logger import logger
-from app.scraper.routes import get_target_url, BIS_BASE_URL
+from backend.core.logger import logger
+from backend.scraper.routes import get_target_url, BIS_BASE_URL
 
 BLOCKED_EXTENSIONS = (
     ".png", ".jpg", ".jpeg", ".svg", ".css", ".woff", ".woff2", ".gif", ".webp", ".ico"
@@ -52,7 +52,7 @@ def _clean_html(html_content: str) -> str:
 
 
 import re
-from app.scraper.standards_scraper import search_bis_standards, extract_is_number
+from backend.scraper.standards_scraper import search_bis_standards, extract_is_number
 
 
 async def scrape_bis_data(category: str, keywords: str, user_query: str = "") -> Dict[str, Any]:

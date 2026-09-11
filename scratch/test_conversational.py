@@ -1,6 +1,11 @@
 import asyncio
+import os
+import sys
 import time
-from app.main import handle_query, QueryRequest
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from backend.main import handle_query, QueryRequest
 
 async def test():
     test_queries = [

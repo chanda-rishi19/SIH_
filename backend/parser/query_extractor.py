@@ -3,8 +3,8 @@ import re
 import concurrent.futures
 from typing import Dict, Any, List, Optional
 from openai import OpenAI
-from app.core.config import settings
-from app.core.logger import logger
+from backend.core.config import settings
+from backend.core.logger import logger
 ALLOWED_CATEGORIES = [
     "general",
     "standards",
@@ -13,8 +13,7 @@ ALLOWED_CATEGORIES = [
     "fmcs",
     "registration-scheme",
     "laboratory-services",
-    "consumer-engagement",
-]
+    "consumer-engagement",]
 SYSTEM_PROMPT = f"""You are a query intent analyzer for the Bureau of Indian Standards (BIS) portal.
 Your task is to analyze the user's query and output a strictly valid JSON object with exactly two keys:
 1. "keywords": A list of 2 to 4 clean, domain-specific search terms without punctuation.
@@ -38,44 +37,46 @@ STOPWORDS = {
     "information", "details", "process", "requirements", "under", "bis", "india"
 }
 def detect_conversational_intent(user_prompt: str) -> Optional[str]:
-    """
-    Detects if the query is a conversational interaction:
+    """Detects if the query is a conversational interaction:
     Returns 'greeting', 'farewell', 'gratitude', 'identity', 'capabilities', 'smalltalk',
     or None if it's a domain/regulatory question."""
     if not user_prompt:
         return None
-    cleaned = re.sub(r"[^\w\s]", "", user_prompt.lower()).strip()
+    cleaned = re.sub(r"[^\w\s\u0900-\u0D7F]", "", user_prompt.lower()).strip()
     words = cleaned.split()
     if not words:
         return None
     greetings = {
         "hi", "hello", "hey", "namaste", "vanakkam", "greetings",
         "good morning", "good afternoon", "good evening", "good day",
-        "heya", "howdy", "hii", "hiii", "helloo"
+        "heya", "howdy", "hii", "hiii", "helloo",
+        "नमस्ते", "नमस्कार", "வணக்கம்", "నమస్కారం", "নমস্কার", "નમસ્તે", "ನಮಸ್ಕಾರ"
     }
     if cleaned in greetings or (len(words) <= 2 and words[0] in greetings):
         return "greeting"
     farewells = {
         "bye", "goodbye", "good bye", "see you", "see ya", "take care",
-        "good night", "have a good day", "have a nice day", "tata", "cya", "farewell"
+        "good night", "have a good day", "have a nice day", "tata", "cya", "farewell",
+        "अलविदा", "பிரியாவிடை", "వీడ్కోలు", "বিদায়", "આવજો"
     }
     if cleaned in farewells or (len(words) <= 3 and any(w in farewells for w in [cleaned, words[0], " ".join(words[:2])])):
         return "farewell"
     gratitude = {
         "thank you", "thanks", "thank you so much", "thanks a lot",
-        "many thanks", "dhanyawad", "shukriya", "much appreciated", "appreciate it"
+        "many thanks", "dhanyawad", "shukriya", "much appreciated", "appreciate it",
+        "धन्यवाद", "शुक्रिया", "நன்றி", "ధన్యవాదాలు", "ধন্যবাদ", "आभार", "આભાર", "ಧನ್ಯವಾದಗಳು"
     }
-    if cleaned in gratitude or any(g in cleaned for g in ["thank you", "thanks", "dhanyawad", "appreciate"]):
+    if cleaned in gratitude or any(g in cleaned for g in ["thank you", "thanks", "dhanyawad", "appreciate", "धन्यवाद", "शुक्रिया", "நன்றி", "ధన్యవాదాలు"]):
         return "gratitude"
-    if any(p in cleaned for p in ["who are you", "what are you", "introduce yourself", "tell me about yourself", "your name", "who made you"]):
+    if any(p in cleaned for p in ["who are you", "what are you", "introduce yourself", "tell me about yourself", "your name", "who made you", "आप कौन हैं", "तुम कौन हो"]):
         return "identity"
-    if any(p in cleaned for p in ["what can you do", "how can you help", "what do you do", "what can i ask", "how does this work", "help me", "help"]):
+    if any(p in cleaned for p in ["what can you do", "how can you help", "what do you do", "what can i ask", "how does this work", "help me", "help", "आप क्या कर सकते हैं"]):
         if not any(tech in cleaned for tech in ["standard", "license", "hallmark", "certificate", "scheme", "lab", "isi"]):
             return "capabilities"
-    if any(p in cleaned for p in ["how are you", "how are you doing", "whats up", "what's up", "how do you do"]):
+    if any(p in cleaned for p in ["how are you", "how are you doing", "whats up", "what's up", "how do you do", "आप कैसे हैं"]):
         return "smalltalk"
-    if cleaned in {"what is bis", "about bis", "tell me about bis", "what does bis do", "bis full form"}:
-        return "identit"y
+    if cleaned in {"what is bis", "about bis", "tell me about bis", "what does bis do", "bis full form", "बीआईएस क्या है"}:
+        return "identity"
     return None
 def _heuristic_fallback(user_prompt: str) -> Dict[str, Any]:
     """Deterministic rule-based fallback when LLM is unavailable or times out.
@@ -88,19 +89,19 @@ def _heuristic_fallback(user_prompt: str) -> Dict[str, Any]:
             "category": "general",
             "conversational_intent": conv_intent,
         }
-    if any(k in prompt_lower for k in ["standards.bis.gov.in", "know your standard", "indian standard", "is specification", "standard formulation", "draft standard", "divisional council", "sectional committee"]):
+    if any(k in prompt_lower for k in ["standards.bis.gov.in", "know your standard", "indian standard", "is specification", "standard formulation", "draft standard", "divisional council", "sectional committee", "मानक", "தரநிலை", "ప్రమాణం", "মান"]):
         category = "standards"
-    elif any(k in prompt_lower for k in ["hallmark", "gold", "silver", "karat", "carat", "jewel", "huid", "assay"]):
+    elif any(k in prompt_lower for k in ["hallmark", "gold", "silver", "karat", "carat", "jewel", "huid", "assay", "सोना", "स्वर्ण", "हॉलमार्क", "हॉलमार्किंग", "தங்கம்", "హాల్‌మార్క్", "স্বর্ণ"]):
         category = "hallmarking"
-    elif any(k in prompt_lower for k in ["fmcs", "foreign", "overseas", "abroad", "importer"]):
+    elif any(k in prompt_lower for k in ["fmcs", "foreign", "overseas", "abroad", "importer", "विदेशी निर्माता"]):
         category = "fmcs"
-    elif any(k in prompt_lower for k in ["crs", "compulsory registration", "electronics", "electronic", "it equipment", "adapter", "battery"]):
+    elif any(k in prompt_lower for k in ["crs", "compulsory registration", "electronics", "electronic", "it equipment", "adapter", "battery", "इलेक्ट्रॉनिक्स", "மின்னணு"]):
         category = "registration-scheme"
-    elif any(k in prompt_lower for k in ["lab", "laboratory", "testing", "calibration", "sample", "test report"]):
+    elif any(k in prompt_lower for k in ["lab", "laboratory", "testing", "calibration", "sample", "test report", "प्रयोगशाला", "परीक्षण", "ஆய்வகம்"]):
         category = "laboratory-services"
-    elif any(k in prompt_lower for k in ["consumer", "complaint", "grievance", "fraud", "care", "app", "rights"]):
+    elif any(k in prompt_lower for k in ["consumer", "complaint", "grievance", "fraud", "care", "app", "rights", "उपभोक्ता", "शिकायत", "புகார்"]):
         category = "consumer-engagement"
-    elif any(k in prompt_lower for k in ["isi", "isi mark", "product license", "certification scheme", "factory"]):
+    elif any(k in prompt_lower for k in ["isi", "isi mark", "product license", "certification scheme", "factory", "प्रमाणन", "लाइसेंस"]):
         category = "product-certification"
     else:
         category = "standards"
@@ -112,7 +113,6 @@ def _heuristic_fallback(user_prompt: str) -> Dict[str, Any]:
         keywords = meaningful + [category]
     else:
         keywords = meaningful[:4]
-
     return {
         "keywords": keywords,
         "category": category,

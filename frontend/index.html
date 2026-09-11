@@ -3,30 +3,163 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BIS assistant</title>
+  <meta name="color-scheme" content="light dark">
+  <title>Bureau of Indian Standards - BIS Assistant</title>
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: ['selector', '[data-theme="dark"]'],
+      theme: {
+        extend: {
+          colors: {
+            bis: {
+              navy: '#0b3b60',
+              'navy-dark': '#062137',
+              'navy-light': '#145388',
+              orange: '#f37023',
+              'orange-hover': '#d95d14',
+              gold: '#c59b27',
+              green: '#16a34a',
+              slate: '#f0f4f8',
+              card: '#ffffff'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem("bis_theme");
+      if (savedTheme === "dark" || savedTheme === "light") {
+        document.documentElement.setAttribute("data-theme", savedTheme);
+      } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        document.documentElement.setAttribute("data-theme", "dark");
+      } else {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <div class="app-container">
 
+    <!-- Official Government of India Tricolor Stripe -->
+    <div class="gov-flag-stripe" aria-hidden="true"></div>
+
+    <!-- Official Government of India Top Portal Bar -->
+    <div class="gov-top-bar">
+      <div class="gov-top-left">
+        <span class="gov-emblem-text">भारत सरकार | Government of India</span>
+        <span class="gov-sep">•</span>
+        <span class="gov-ministry-text">उपभोक्ता मामले, खाद्य और सार्वजनिक वितरण मंत्रालय</span>
+      </div>
+      <div class="gov-top-right">
+        <a href="https://bis.gov.in" target="_blank" rel="noopener noreferrer" class="gov-link">bis.gov.in &nearr;</a>
+        <span class="gov-sep">|</span>
+        <a href="https://standardsbis.bsbedge.com" target="_blank" rel="noopener noreferrer" class="gov-link">Standards Portal &nearr;</a>
+      </div>
+    </div>
+
     <!-- Header -->
     <header class="app-header">
       <div class="header-brand">
-        <div class="brand-icon">BIS</div>
-        <div>
-          <h1 class="brand-title">BIS assistant</h1>
-          <p class="brand-subtitle">Indian Standards & Regulatory Guidance</p>
+        <!-- Official BIS Circular Seal Emblem SVG -->
+        <div class="brand-logo-wrap" title="Bureau of Indian Standards - मानकः पथप्रदर्शकः">
+          <svg class="bis-logo-svg" width="46" height="46" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bureau of Indian Standards Emblem">
+            <!-- Outer Gold Rim -->
+            <circle cx="50" cy="50" r="48" fill="#0b3b60" stroke="#c59b27" stroke-width="2.5"/>
+            <circle cx="50" cy="50" r="44" fill="none" stroke="#f37023" stroke-width="1.2" stroke-dasharray="2.5 2"/>
+            
+            <!-- Curved Paths for bilingual text -->
+            <path id="bis-arc-top" d="M 18,50 A 32,32 0 0,1 82,50" fill="none"/>
+            <path id="bis-arc-bottom" d="M 82,50 A 32,32 0 0,1 18,50" fill="none"/>
+            
+            <!-- Inner Ring -->
+            <circle cx="50" cy="50" r="32" fill="#ffffff" stroke="#c59b27" stroke-width="1.5"/>
+            
+            <!-- Central BIS Geometric Scale / Standards Pyramid Motif -->
+            <g transform="translate(50, 47) scale(0.72)">
+              <!-- Base Standard Scale / Pyramid -->
+              <path d="M-22,12 L0,-24 L22,12 Z" fill="#0b3b60" stroke="#0b3b60" stroke-width="2"/>
+              <path d="M-14,9 L0,-18 L14,9 Z" fill="#ffffff"/>
+              <circle cx="0" cy="-6" r="5.5" fill="#f37023"/>
+              <!-- Hallmark Gold Balance Bar -->
+              <rect x="-18" y="10" width="36" height="4.5" rx="2" fill="#c59b27"/>
+              <!-- Motto ribbon base -->
+              <path d="M-26,18 Q0,24 26,18 L24,24 Q0,30 -24,24 Z" fill="#f37023"/>
+            </g>
+            
+            <!-- Bilingual Top and Bottom Curved Text -->
+            <text font-size="7" font-weight="700" fill="#ffffff" letter-spacing="0.6">
+              <textPath href="#bis-arc-top" startOffset="50%" text-anchor="middle">भारतीय मानक ब्यूरो</textPath>
+            </text>
+            <text font-size="5.2" font-weight="700" fill="#ffffff" letter-spacing="0.3">
+              <textPath href="#bis-arc-bottom" startOffset="50%" text-anchor="middle">BUREAU OF INDIAN STANDARDS</textPath>
+            </text>
+            
+            <!-- Motto text -->
+            <text x="50" y="70" font-size="4.2" font-weight="bold" fill="#0b3b60" text-anchor="middle">मानकः पथप्रदर्शकः</text>
+          </svg>
+        </div>
+        <div class="brand-text-block">
+          <div class="brand-hindi-title">भारतीय मानक ब्यूरो</div>
+          <h1 class="brand-title" data-i18n="brandTitle">Bureau of Indian Standards</h1>
+          <p class="brand-subtitle" data-i18n="brandSubtitle">Official Standards &amp; Quality Assistant</p>
         </div>
       </div>
 
       <div class="header-actions">
-        <button id="bis-account-btn" type="button" class="btn-header" title="Manage official BIS portal login credentials">
-          <span id="bis-auth-indicator" class="status-dot guest"></span>
-          <span id="bis-account-text">Account: Guest</span>
+        <!-- Language Selector -->
+        <div class="lang-selector-wrapper" title="Select language">
+          <svg class="lang-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <select id="lang-select" class="lang-select" aria-label="Select Language">
+            <option value="en">English</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+            <option value="ta">தமிழ் (Tamil)</option>
+            <option value="te">తెలుగు (Telugu)</option>
+            <option value="bn">বাংলা (Bengali)</option>
+            <option value="mr">मराठी (Marathi)</option>
+            <option value="gu">ગુજરાતી (Gujarati)</option>
+            <option value="kn">ಕನ್ನಡ (Kannada)</option>
+          </select>
+        </div>
+
+        <!-- Theme Toggle Button (Light / Dark) -->
+        <button id="theme-toggle-btn" type="button" class="btn-header btn-icon-only" title="Toggle Light / Dark mode" aria-label="Toggle theme">
+          <!-- Sun Icon (shown in dark mode to switch to light) -->
+          <svg id="theme-icon-sun" class="theme-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <!-- Moon Icon (shown in light mode to switch to dark) -->
+          <svg id="theme-icon-moon" class="theme-icon" style="display: none;" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
         </button>
 
-        <button id="clear-chat-btn" type="button" class="btn-header" title="Clear chat history">
+        <button id="bis-account-btn" type="button" class="btn-header" title="Manage official BIS portal login credentials">
+          <span id="bis-auth-indicator" class="status-dot guest"></span>
+          <span id="bis-account-text" data-i18n="accountGuest">Account: Guest</span>
+        </button>
+
+        <button id="clear-chat-btn" type="button" class="btn-header" title="Clear chat history" data-i18n="clearChat">
           Clear
         </button>
       </div>
@@ -36,24 +169,36 @@
     <main id="chat-feed" class="chat-feed" role="log" aria-live="polite">
       <!-- Initial Greeting Message from BIS assistant -->
       <div class="message-row assistant-row">
-        <div class="avatar avatar-assistant">BIS</div>
+        <div class="avatar avatar-assistant" title="Bureau of Indian Standards">
+          <svg class="avatar-emblem-svg" width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="48" fill="#0b3b60" stroke="#c59b27" stroke-width="2.5"/>
+            <circle cx="50" cy="50" r="32" fill="#ffffff"/>
+            <g transform="translate(50, 48) scale(0.68)">
+              <path d="M-22,12 L0,-24 L22,12 Z" fill="#0b3b60"/>
+              <circle cx="0" cy="-6" r="5" fill="#f37023"/>
+              <rect x="-18" y="10" width="36" height="4" rx="2" fill="#c59b27"/>
+            </g>
+            <text x="50" y="24" font-size="9" font-weight="bold" fill="#ffffff" text-anchor="middle">BIS</text>
+            <text x="50" y="90" font-size="7.5" font-weight="bold" fill="#ffffff" text-anchor="middle">मानक</text>
+          </svg>
+        </div>
         <div class="message-bubble">
           <div class="bubble-meta">
             <div class="meta-tags">
-              <span class="meta-tag">Official Assistant</span>
+              <span class="meta-tag tag-official-portal" data-i18n="tagOfficial">Official BIS Assistant</span>
               <span class="meta-tag">standardsbis.bsbedge.com</span>
             </div>
           </div>
           <div class="bubble-markdown">
-            <p><strong>Hello! I am your BIS assistant.</strong></p>
-            <p>I provide verified, source-backed answers from the Bureau of Indian Standards catalog. You can search by Indian Standard (IS) number, product name, or regulatory scheme:</p>
+            <p><strong data-i18n="greetingHello">Hello! I am your Bureau of Indian Standards (BIS) Assistant.</strong></p>
+            <p data-i18n="greetingDesc">Ask any question about Indian Standards (IS), product certification, ISI mark, or gold hallmarking:</p>
             
             <div class="chips-container" id="greeting-chips">
-              <button class="chat-chip" data-query="What are the purity grades and hallmarking rules under IS 1417?">Gold Hallmarking (IS 1417)</button>
-              <button class="chat-chip" data-query="What is the specification for Ordinary Portland Cement under IS 269?">Portland Cement (IS 269)</button>
-              <button class="chat-chip" data-query="What are the test parameters for Packaged Drinking Water under IS 14543?">Packaged Water (IS 14543)</button>
-              <button class="chat-chip" data-query="What is the procedure to obtain an ISI mark license under Scheme-I?">ISI Mark Procedure</button>
-              <button class="chat-chip" data-query="What electronic products are covered under Compulsory Registration Scheme (CRS)?">CRS Electronics</button>
+              <button class="chat-chip" data-chip="gold" data-query="What are the purity grades and hallmarking rules under IS 1417?">Gold Hallmarking (IS 1417)</button>
+              <button class="chat-chip" data-chip="cement" data-query="What is the specification for Ordinary Portland Cement under IS 269?">Portland Cement (IS 269)</button>
+              <button class="chat-chip" data-chip="water" data-query="What are the test parameters for Packaged Drinking Water under IS 14543?">Packaged Water (IS 14543)</button>
+              <button class="chat-chip" data-chip="isi" data-query="What is the procedure to obtain an ISI mark license under Scheme-I?">ISI Mark Procedure</button>
+              <button class="chat-chip" data-chip="crs" data-query="What electronic products are covered under Compulsory Registration Scheme (CRS)?">CRS Electronics</button>
             </div>
           </div>
         </div>
@@ -64,26 +209,129 @@
     <footer class="chat-input-area">
       <form id="chat-form">
         <div class="input-wrapper">
-          <textarea
-            id="chat-input"
-            class="chat-textarea"
-            rows="1"
-            placeholder="Ask BIS assistant (e.g., IS 1417, IS 269, cement, water testing)..."
-            required
-          ></textarea>
-          <button type="submit" id="send-btn" class="btn-send" title="Send query" aria-label="Send query">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"></line>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
-          </button>
+          <!-- Attachment Preview Strip (Images or Documents) -->
+          <div id="attachment-preview-bar" class="attachment-preview-bar" style="display: none;">
+            <div class="attachment-item">
+              <div id="att-thumb-container" class="att-thumb-container"></div>
+              <div class="att-details">
+                <span id="att-name" class="att-name">file_name.ext</span>
+                <span id="att-size" class="att-size">0 KB</span>
+              </div>
+              <button type="button" id="remove-att-btn" class="btn-remove-att" title="Remove attachment" aria-label="Remove attachment">&times;</button>
+            </div>
+          </div>
+
+          <!-- Voice Recording / Speech-to-Text Banner -->
+          <div id="voice-listening-bar" class="voice-listening-bar" style="display: none;">
+            <div class="voice-pulse-dot"></div>
+            <div class="voice-soundwave">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <span class="voice-text" data-i18n="voiceListening">Listening... Speak clearly into your microphone</span>
+            <button type="button" id="stop-voice-btn" class="btn-stop-voice" title="Stop listening" data-i18n="voiceDone">Done</button>
+          </div>
+
+          <!-- Main Input Row -->
+          <div class="input-row">
+            <textarea
+              id="chat-input"
+              class="chat-textarea"
+              rows="1"
+              placeholder="Ask BIS assistant (e.g., IS 1417, IS 269, cement, water testing)..."
+              data-i18n-placeholder="chatPlaceholder"
+            ></textarea>
+
+            <!-- Query Options & Send Group -->
+            <div class="input-action-buttons">
+              <!-- Camera Button -->
+              <button type="button" id="camera-btn" class="btn-action-icon" title="Take photo or inspect ISI/Hallmark" aria-label="Open camera">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+              </button>
+
+              <!-- Voice / Speech Button -->
+              <button type="button" id="voice-btn" class="btn-action-icon" title="Voice query (Speech to text)" aria-label="Voice search">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+              </button>
+
+              <!-- Document Attachment Button -->
+              <button type="button" id="doc-btn" class="btn-action-icon" title="Attach document (PDF, TXT, CSV)" aria-label="Attach document">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </button>
+
+              <!-- Send Query Button -->
+              <button type="submit" id="send-btn" class="btn-send" title="Send query" aria-label="Send query">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Hidden File Inputs -->
+          <input type="file" id="camera-file-input" accept="image/*" capture="environment" hidden>
+          <input type="file" id="doc-file-input" accept=".pdf,.txt,.doc,.docx,.csv" hidden>
         </div>
+
         <div class="input-footer">
-          <span>Enter to send &bull; Shift+Enter for new line</span>
-          <span id="system-status">System Ready</span>
+          <span data-i18n="inputHint">Enter to send &bull; Shift+Enter for new line</span>
+          <span id="system-status" data-i18n="systemReady">System Ready</span>
         </div>
       </form>
     </footer>
+
+    <!-- Camera / Scanner Modal -->
+    <div id="camera-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="camera-modal-title">
+      <div class="modal-card camera-modal-card">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 16px;">📷</span>
+            <h2 id="camera-modal-title" class="modal-title" data-i18n="cameraTitle">Live Camera Capture</h2>
+          </div>
+          <button id="close-camera-btn" class="btn-close" aria-label="Close camera">&times;</button>
+        </div>
+
+        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;" data-i18n="cameraDesc">
+          Point camera at a product, ISI logo, or Gold Hallmarking HUID to attach with your query.
+        </p>
+
+        <!-- Video Viewfinder Frame -->
+        <div class="camera-viewfinder-container">
+          <video id="camera-video" autoplay playsinline muted></video>
+          <div class="viewfinder-reticle">
+            <span class="corner tl"></span>
+            <span class="corner tr"></span>
+            <span class="corner bl"></span>
+            <span class="corner br"></span>
+            <div class="reticle-label" data-i18n="cameraReticle">BIS Product / Label Scanner</div>
+          </div>
+          <canvas id="camera-canvas" hidden></canvas>
+        </div>
+
+        <div class="camera-actions">
+          <button type="button" id="upload-photo-btn" class="btn-secondary" title="Choose photo from device" data-i18n="selectPhoto">
+            📁 Select Photo
+          </button>
+          <button type="button" id="snap-photo-btn" class="btn-primary" title="Snap current camera frame" data-i18n="capturePhoto">
+            📸 Capture Photo
+          </button>
+        </div>
+      </div>
+    </div>
 
   </div>
 
