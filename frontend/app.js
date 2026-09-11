@@ -20,6 +20,9 @@ const ASSISTANT_AVATAR_HTML = `
   </div>
 `;
 
+
+
+
 const TRANSLATIONS = {
   en: {
     brandTitle: "Bureau of Indian Standards",
@@ -402,6 +405,12 @@ const VOICE_LOCALES = {
   kn: "kn-IN"
 };
 
+// Compatibility aliases
+const translations = TRANSLATIONS;
+const voice_local = VOICE_LOCALES;
+const voice_locales = VOICE_LOCALES;
+
+
 document.addEventListener("DOMContentLoaded", () => {
   const chatFeed = document.getElementById("chat-feed");
   const chatForm = document.getElementById("chat-form");
@@ -463,6 +472,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentUtterance = null;
   let currentSpeakingBtn = null;
   let currentLanguage = localStorage.getItem("bis_lang") || "en";
+  let _langDebounceTimer = null;
   const chatMessages = [];
 
   // Initialize Theme and Language
@@ -672,8 +682,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Multilingual Controller ---
-  let _langDebounceTimer = null;
-
   function initLanguage() {
     if (langSelect) {
       langSelect.value = currentLanguage;
